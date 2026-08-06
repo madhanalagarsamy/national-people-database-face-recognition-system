@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyd
+*.pyo
+*.pycache
+
+# Virtual Environments
+venv/
+env/
+.env/
+.venv/
+
+# Database (runtime generated)
+database/citizens.db
+
+# Citizen Photos (personal data - not committed to git)
+images/citizen_photos/
+
+# Face Detection Models (downloaded at runtime)
+models/
+
+# IDE & Editor
+.vscode/
+.idea/
+*.suo
+*.user
+
+# OS Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
