@@ -2,7 +2,7 @@
 
 A desktop application built using **Python**, **Tkinter (ttk)**, **SQLite3**, **OpenCV**, and **Facial Recognition** techniques for managing citizen identity records, capturing biometric facial images, and verifying identity via webcam or uploaded images.
 
-> 🔒 **Educational Project Notice**: This software is built solely for educational and college demonstration purposes. It uses fictional sample data and must not represent a real government or national identity database.
+> 🔒 **Educational Project Notice**: This software is built solely for educational and college demonstration purposes. It uses fictional sample data and must not represent a real database.
 
 ---
 
