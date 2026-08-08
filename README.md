@@ -83,6 +83,9 @@ NationalPeopleDatabase/
 | `national_id` | TEXT | UNIQUE, NOT NULL |
 | `email` | TEXT | NOT NULL |
 | `photo_path` | TEXT | NOT NULL |
+| `criminal_record` | TEXT | OPTIONAL |
+| `document_path` | TEXT | OPTIONAL |
+| `document_description` | TEXT | OPTIONAL |
 | `created_at` | TEXT | NOT NULL |
 
 ---
