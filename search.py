@@ -152,15 +152,17 @@ class SearchCitizenWindow(tk.Toplevel):
             ("Phone:", "phone"),
             ("Email:", "email"),
             ("Address:", "address"),
+            ("Criminal Record:", "criminal_record"),
+            ("Document:", "document_info"),
             ("Registered:", "created_at")
         ]
 
         for idx, (lbl_txt, k) in enumerate(info_fields):
             l = tk.Label(self.details_grid, text=lbl_txt, font=config.FONT_BODY_BOLD, bg=config.COLOR_CARD_BG, fg=config.COLOR_MUTED_TEXT, anchor="w")
-            l.grid(row=idx, column=0, sticky="w", pady=3)
+            l.grid(row=idx, column=0, sticky="w", pady=2)
 
             v = tk.Label(self.details_grid, text="--", font=config.FONT_BODY, bg=config.COLOR_CARD_BG, fg=config.COLOR_DARK_TEXT, anchor="w", wraplength=200)
-            v.grid(row=idx, column=1, sticky="w", padx=(10, 0), pady=3)
+            v.grid(row=idx, column=1, sticky="w", padx=(10, 0), pady=2)
             self.info_labels[k] = v
 
     def perform_search(self):
@@ -218,6 +220,12 @@ class SearchCitizenWindow(tk.Toplevel):
         self.info_labels["phone"].config(text=citizen['phone'])
         self.info_labels["email"].config(text=citizen['email'])
         self.info_labels["address"].config(text=citizen['address'])
+        crim = citizen.get('criminal_record') or "Clean / None"
+        self.info_labels["criminal_record"].config(text=crim)
+        doc_path = citizen.get('document_path') or ""
+        doc_desc = citizen.get('document_description') or ""
+        doc_str = doc_desc if doc_desc else (doc_path if doc_path else "None")
+        self.info_labels["document_info"].config(text=doc_str)
         self.info_labels["created_at"].config(text=citizen['created_at'])
 
         # Load Facial Photo

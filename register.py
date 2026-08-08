@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, filedialog
 import os
 import config
 import database
@@ -47,12 +47,15 @@ class RegisterCitizenWindow(tk.Toplevel):
             ("Citizen ID *", "entry_id"),
             ("Full Name *", "entry_name"),
             ("Age *", "entry_age"),
-            ("Gender *", "combo_gender"),
+            ("Gender *", "entry_gender"),
             ("Date of Birth (YYYY-MM-DD) *", "entry_dob"),
             ("National ID Card No *", "entry_national_id"),
             ("Phone Number *", "entry_phone"),
             ("Email Address *", "entry_email"),
-            ("Residential Address *", "entry_address")
+            ("Residential Address *", "entry_address"),
+            ("Criminal Record", "entry_criminal"),
+            ("Document Path", "entry_document"),
+            ("Document Description", "entry_doc_desc")
         ]
 
         self.inputs = {}
@@ -68,7 +71,7 @@ class RegisterCitizenWindow(tk.Toplevel):
             )
             lbl.grid(row=idx, column=0, sticky="w", pady=4)
 
-            if key == "combo_gender":
+            if key == "entry_gender":
                 widget = ttk.Combobox(
                     left_frame,
                     values=["Male", "Female", "Other"],
@@ -89,8 +92,11 @@ class RegisterCitizenWindow(tk.Toplevel):
                     width=30
                 )
 
-            widget.grid(row=idx, column=1, sticky="w", padx=(10, 0), pady=4, ipady=3 if key != "combo_gender" else 1)
+            widget.grid(row=idx, column=1, sticky="w", padx=(10, 0), pady=4, ipady=3 if key != "entry_gender" else 1)
             self.inputs[key] = widget
+            if key == "entry_document":
+                browse_btn = tk.Button(left_frame, text="Browse...", command=self.browse_document)
+                browse_btn.grid(row=idx, column=2, padx=5)
 
         # Auto-suggest Next Citizen ID
         existing = database.get_all_citizens()
@@ -195,7 +201,7 @@ class RegisterCitizenWindow(tk.Toplevel):
         c_id = self.inputs['entry_id'].get().strip()
         name = self.inputs['entry_name'].get().strip()
         age = self.inputs['entry_age'].get().strip()
-        gender = self.inputs['combo_gender'].get().strip()
+        gender = self.inputs['entry_gender'].get().strip()
         dob = self.inputs['entry_dob'].get().strip()
         nat_id = self.inputs['entry_national_id'].get().strip()
         phone = self.inputs['entry_phone'].get().strip()
@@ -220,6 +226,10 @@ class RegisterCitizenWindow(tk.Toplevel):
             return
 
         # Attempt Database Insertion
+        # Gather optional admin fields
+        criminal_record = self.inputs.get('entry_criminal').get().strip() if self.inputs.get('entry_criminal') else None
+        document_path = self.inputs.get('entry_document').get().strip() if self.inputs.get('entry_document') else None
+        document_description = self.inputs.get('entry_doc_desc').get().strip() if self.inputs.get('entry_doc_desc') else None
         success, msg = database.add_citizen(
             citizen_id=int(c_id),
             name=name,
@@ -230,7 +240,10 @@ class RegisterCitizenWindow(tk.Toplevel):
             phone=phone,
             national_id=nat_id,
             email=email,
-            photo_path=self.captured_photo_path
+            photo_path=self.captured_photo_path,
+            criminal_record=criminal_record if criminal_record else None,
+            document_path=document_path if document_path else None,
+            document_description=document_description if document_description else None
         )
 
         if success:
@@ -243,10 +256,16 @@ class RegisterCitizenWindow(tk.Toplevel):
 
     def reset_form(self):
         for k, widget in self.inputs.items():
-            if k == "combo_gender":
+            if k == "entry_gender":
                 widget.set("Male")
             else:
                 widget.delete(0, tk.END)
 
         self.captured_photo_path = None
         self.photo_preview.config(image="", text="No Photo Captured\n\nClick 'Capture Face'\nbelow to take a photo")
+    def browse_document(self):
+        file_path = filedialog.askopenfilename(title="Select Document", filetypes=[("All Files", "*.*")])
+        if file_path:
+            self.inputs['entry_document'].delete(0, tk.END)
+            self.inputs['entry_document'].insert(0, file_path)
+

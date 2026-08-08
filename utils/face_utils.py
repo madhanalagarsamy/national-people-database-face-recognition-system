@@ -3,6 +3,7 @@ import numpy as np
 from PIL import Image, ImageTk
 import os
 import urllib.request
+import ssl
 import config
 
 # Try importing face_recognition library (dlib-based, optional)
@@ -31,12 +32,15 @@ def _ensure_yunet_model():
     os.makedirs(model_dir, exist_ok=True)
     if not os.path.exists(YUNET_MODEL_PATH):
         print(f"[face_utils] Downloading YuNet face detection model...")
-        try:
-            urllib.request.urlretrieve(YUNET_MODEL_URL, YUNET_MODEL_PATH)
-            print(f"[face_utils] Model saved to: {YUNET_MODEL_PATH}")
-        except Exception as e:
-            print(f"[face_utils] WARNING: Could not download YuNet model: {e}")
-            return False
+    try:
+        # Use unverified SSL context to avoid certificate issues
+        context = ssl._create_unverified_context()
+        with urllib.request.urlopen(YUNET_MODEL_URL, context=context) as response, open(YUNET_MODEL_PATH, 'wb') as out_file:
+            out_file.write(response.read())
+        print(f"[face_utils] Model saved to: {YUNET_MODEL_PATH}")
+    except Exception as e:
+        print(f"[face_utils] WARNING: Could not download YuNet model: {e}")
+        return False
     return os.path.exists(YUNET_MODEL_PATH)
 
 # Global detector instance (lazy init, created once)

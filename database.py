@@ -32,9 +32,25 @@ def init_db():
             national_id TEXT UNIQUE NOT NULL,
             email TEXT NOT NULL,
             photo_path TEXT NOT NULL,
+            criminal_record TEXT,
+            document_path TEXT,
+            document_description TEXT,
             created_at TEXT NOT NULL
         );
     """)
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_citizens_name ON citizens(name);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_citizens_national_id ON citizens(national_id);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_citizens_id ON citizens(citizen_id);")
+
+    # Migrate existing database files if columns are missing
+    cursor.execute("PRAGMA table_info(citizens);")
+    existing_columns = [row[1] for row in cursor.fetchall()]
+    if "criminal_record" not in existing_columns:
+        cursor.execute("ALTER TABLE citizens ADD COLUMN criminal_record TEXT;")
+    if "document_path" not in existing_columns:
+        cursor.execute("ALTER TABLE citizens ADD COLUMN document_path TEXT;")
+    if "document_description" not in existing_columns:
+        cursor.execute("ALTER TABLE citizens ADD COLUMN document_description TEXT;")
 
     # Table: users (Authentication)
     cursor.execute("""
@@ -45,6 +61,7 @@ def init_db():
             created_at TEXT NOT NULL
         );
     """)
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);")
 
     # Table: recognition_logs
     cursor.execute("""
@@ -81,16 +98,16 @@ def login(username, password):
     conn.close()
     return user is not None
 
-def add_citizen(citizen_id, name, age, gender, dob, address, phone, national_id, email, photo_path):
-    """Inserts a new citizen record into database."""
+def add_citizen(citizen_id, name, age, gender, dob, address, phone, national_id, email, photo_path, criminal_record=None, document_path=None, document_description=None):
+    """Inserts a new citizen record into database, including optional admin fields."""
     conn = get_connection()
     cursor = conn.cursor()
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     try:
         cursor.execute("""
-            INSERT INTO citizens (citizen_id, name, age, gender, dob, address, phone, national_id, email, photo_path, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-        """, (int(citizen_id), name, int(age), gender, dob, address, phone, national_id, email, photo_path, now_str))
+            INSERT INTO citizens (citizen_id, name, age, gender, dob, address, phone, national_id, email, photo_path, criminal_record, document_path, document_description, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+        """, (int(citizen_id), name, int(age), gender, dob, address, phone, national_id, email, photo_path, criminal_record, document_path, document_description, now_str))
         conn.commit()
         return True, "Citizen record registered successfully."
     except sqlite3.IntegrityError as e:
@@ -106,23 +123,46 @@ def add_citizen(citizen_id, name, age, gender, dob, address, phone, national_id,
     finally:
         conn.close()
 
-def update_citizen(citizen_id, name, address, phone, email, photo_path=None):
-    """Updates editable details of an existing citizen record."""
+def update_citizen(citizen_id, name, address, phone, email, photo_path=None, criminal_record=None, document_path=None, document_description=None):
+    """Updates editable details of an existing citizen record, including optional admin fields."""
     conn = get_connection()
     cursor = conn.cursor()
     try:
-        if photo_path:
-            cursor.execute("""
-                UPDATE citizens
-                SET name = ?, address = ?, phone = ?, email = ?, photo_path = ?
-                WHERE citizen_id = ?;
-            """, (name, address, phone, email, photo_path, int(citizen_id)))
-        else:
-            cursor.execute("""
-                UPDATE citizens
-                SET name = ?, address = ?, phone = ?, email = ?
-                WHERE citizen_id = ?;
-            """, (name, address, phone, email, int(citizen_id)))
+        fields = []
+        params = []
+        if name is not None:
+            fields.append("name = ?")
+            params.append(name)
+        if address is not None:
+            fields.append("address = ?")
+            params.append(address)
+        if phone is not None:
+            fields.append("phone = ?")
+            params.append(phone)
+        if email is not None:
+            fields.append("email = ?")
+            params.append(email)
+        if photo_path is not None:
+            fields.append("photo_path = ?")
+            params.append(photo_path)
+        if criminal_record is not None:
+            fields.append("criminal_record = ?")
+            params.append(criminal_record)
+        if document_path is not None:
+            fields.append("document_path = ?")
+            params.append(document_path)
+        if document_description is not None:
+            fields.append("document_description = ?")
+            params.append(document_description)
+        if not fields:
+            return False, "No fields provided for update."
+        set_clause = ", ".join(fields)
+        params.append(int(citizen_id))
+        cursor.execute(f"""
+            UPDATE citizens
+            SET {set_clause}
+            WHERE citizen_id = ?;
+        """, params)
         conn.commit()
         return True, "Citizen details updated successfully."
     except Exception as e:

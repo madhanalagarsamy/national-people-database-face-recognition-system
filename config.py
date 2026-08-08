@@ -6,10 +6,13 @@ DATABASE_DIR = os.path.join(BASE_DIR, "database")
 IMAGES_DIR = os.path.join(BASE_DIR, "images", "citizen_photos")
 ICONS_DIR = os.path.join(BASE_DIR, "icons")
 
+# Directories for uploads
+DOCUMENTS_DIR = os.path.join(BASE_DIR, "documents")
 # Ensure required directories exist
 os.makedirs(DATABASE_DIR, exist_ok=True)
 os.makedirs(IMAGES_DIR, exist_ok=True)
 os.makedirs(ICONS_DIR, exist_ok=True)
+os.makedirs(DOCUMENTS_DIR, exist_ok=True)
 
 # Database File Path
 DB_PATH = os.path.join(DATABASE_DIR, "citizens.db")
